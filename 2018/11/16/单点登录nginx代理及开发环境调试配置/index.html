@@ -17,7 +17,7 @@
 <meta property="og:image" content="http://yoursite.com/images/ng-start.png">
 <meta property="og:image" content="http://yoursite.com/images/ng-ok.png">
 <meta property="og:image" content="http://yoursite.com/images/ng-80.png">
-<meta property="og:updated_time" content="2018-11-16T08:12:01.177Z">
+<meta property="og:updated_time" content="2018-11-16T08:16:47.920Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="单点登录nginx代理及开发环境调试配置">
 <meta name="twitter:description" content="最近做项目，遇到单点登录，方法是在前端做nginx代理。应用系统需要配合做如下调整：1、使用“*.顶级域名”访问，确保可以和KAM共享cookie2、对来自Nginx代理的访问放开登录认证（安全起见，对来自其他IP的访问应该禁止）3、应用系统从请求头kam_remote_user中读取登录用户（Nginx会将登录用户写入请求头）4、如果应用系统需要KAM的全局唯一token，可以从cookie中读">
@@ -229,7 +229,7 @@
         
             
             <p>最近做项目，遇到单点登录，方法是在前端做nginx代理。<br>应用系统需要配合做如下调整：<br>1、使用“*.顶级域名”访问，确保可以和KAM共享cookie<br>2、对来自Nginx代理的访问放开登录认证（安全起见，对来自其他IP的访问应该禁止）<br>3、应用系统从请求头kam_remote_user中读取登录用户（Nginx会将登录用户写入请求头）<br>4、如果应用系统需要KAM的全局唯一token，可以从cookie中读取kam_sso_token的值</p>
-<p>刚开始调试的时候是在正式环境，每次修改完代码需要重新构建才能看到效果，<br>实在繁琐，还产生了一堆不必要的commit 历史。调通之后开始思考如何在本地开发环境调试单点登录这一功能。<br>不辱使命，研究出来了，以下是步骤。</p>
+<p>刚开始调试的时候是在正式环境，每次修改完代码需要重新构建才能看到效果，<br>实在繁琐，还产生了一堆不必要的commit 历史。调通之后开始思考如何在本地开发环境调试单点登录这一功能。<br>不辱使命，研究出来了，以下是步骤。<br><a id="more"></a></p>
 <h3 id="1、配置项目-nginx-conf"><a href="#1、配置项目-nginx-conf" class="headerlink" title="1、配置项目 nginx.conf"></a>1、配置项目 nginx.conf</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">        root   /usr/share/nginx/html;</span><br><span class="line">           auth_request /kam_auth;</span><br><span class="line">           error_page 401 = @error401;</span><br><span class="line">           auth_request_set $kam_remote_url $upstream_http_kam_remote_url;</span><br><span class="line">           proxy_set_header kam_remote_user $upstream_http_kam_remote_user;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">   location /kam_auth &#123;</span><br><span class="line">   		internal;</span><br><span class="line">   		proxy_set_header kam_remote_url "$scheme://$http_host$request_uri";</span><br><span class="line">   		proxy_set_header Host $host;</span><br><span class="line">   		proxy_pass_request_body off;</span><br><span class="line">   		proxy_set_header Content-Length "";</span><br><span class="line">   		proxy_pass 单点登录页面网址/auth;</span><br><span class="line">   	&#125;</span><br><span class="line"></span><br><span class="line">   location @error401 &#123;</span><br><span class="line">   		add_header Set-Cookie "NSREDIRECT=$kam_remote_url;Path=/;Domain=顶级域名";</span><br><span class="line">   		return 302 单点登录页面网址;</span><br><span class="line">   	&#125;</span><br></pre></td></tr></table></figure>
 <p>配置完后发布到正式环境，单点登录功能已可用</p>
 <p>继续配置，我们的目标是 dev 环境也能单点登录！</p>
@@ -252,7 +252,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/11/16/单点登录nginx代理及开发环境调试配置/" data-id="cjojqyvg9001cpck3nguiv7py" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/11/16/单点登录nginx代理及开发环境调试配置/" data-id="cjojr2ffj001diok3kxsn70yf" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
