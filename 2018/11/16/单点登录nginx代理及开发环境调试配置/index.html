@@ -3,20 +3,25 @@
 <head>
     <meta charset="utf-8">
     
-    <title>CSS3 3D transform变换 | iT豆</title>
+    <title>单点登录nginx代理及开发环境调试配置 | iT豆</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-    <meta name="description" content="张鑫旭-CSS3 3D transform变换">
-<meta name="keywords" content="css">
+    <meta name="description" content="最近做项目，遇到单点登录，方法是在前端做nginx代理。应用系统需要配合做如下调整：1、使用“*.顶级域名”访问，确保可以和KAM共享cookie2、对来自Nginx代理的访问放开登录认证（安全起见，对来自其他IP的访问应该禁止）3、应用系统从请求头kam_remote_user中读取登录用户（Nginx会将登录用户写">
+<meta name="keywords" content="nginx 代理">
 <meta property="og:type" content="article">
-<meta property="og:title" content="CSS3 3D transform变换">
-<meta property="og:url" content="http://yoursite.com/2018/07/26/CSS3-3D-transform变换/index.html">
+<meta property="og:title" content="单点登录nginx代理及开发环境调试配置">
+<meta property="og:url" content="http://yoursite.com/2018/11/16/单点登录nginx代理及开发环境调试配置/index.html">
 <meta property="og:site_name" content="iT豆">
-<meta property="og:description" content="张鑫旭-CSS3 3D transform变换">
+<meta property="og:description" content="最近做项目，遇到单点登录，方法是在前端做nginx代理。应用系统需要配合做如下调整：1、使用“*.顶级域名”访问，确保可以和KAM共享cookie2、对来自Nginx代理的访问放开登录认证（安全起见，对来自其他IP的访问应该禁止）3、应用系统从请求头kam_remote_user中读取登录用户（Nginx会将登录用户写入请求头）4、如果应用系统需要KAM的全局唯一token，可以从cookie中读">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:updated_time" content="2018-09-07T09:05:06.960Z">
+<meta property="og:image" content="http://yoursite.com/images/hosts1.png">
+<meta property="og:image" content="http://yoursite.com/images/ng-start.png">
+<meta property="og:image" content="http://yoursite.com/images/ng-ok.png">
+<meta property="og:image" content="http://yoursite.com/images/ng-80.png">
+<meta property="og:updated_time" content="2018-11-16T08:12:01.177Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="CSS3 3D transform变换">
-<meta name="twitter:description" content="张鑫旭-CSS3 3D transform变换">
+<meta name="twitter:title" content="单点登录nginx代理及开发环境调试配置">
+<meta name="twitter:description" content="最近做项目，遇到单点登录，方法是在前端做nginx代理。应用系统需要配合做如下调整：1、使用“*.顶级域名”访问，确保可以和KAM共享cookie2、对来自Nginx代理的访问放开登录认证（安全起见，对来自其他IP的访问应该禁止）3、应用系统从请求头kam_remote_user中读取登录用户（Nginx会将登录用户写入请求头）4、如果应用系统需要KAM的全局唯一token，可以从cookie中读">
+<meta name="twitter:image" content="http://yoursite.com/images/hosts1.png">
     
 
     
@@ -185,7 +190,7 @@
 </aside>
 
             
-            <section id="main"><article id="post-CSS3-3D-transform变换" class="article article-type-post" itemscope itemprop="blogPost">
+            <section id="main"><article id="post-单点登录nginx代理及开发环境调试配置" class="article article-type-post" itemscope itemprop="blogPost">
     <div class="article-inner">
         
         
@@ -193,7 +198,7 @@
                 
     
         <h1 class="article-title" itemprop="name">
-            CSS3 3D transform变换
+            单点登录nginx代理及开发环境调试配置
         </h1>
     
 
@@ -202,22 +207,17 @@
                         
     <div class="article-date">
         <i class="fas fa-calendar-alt"></i>
-        <a href="/2018/07/26/CSS3-3D-transform变换/">
-            <time datetime="2018-07-26T06:17:24.000Z" itemprop="datePublished">2018-07-26</time>
+        <a href="/2018/11/16/单点登录nginx代理及开发环境调试配置/">
+            <time datetime="2018-11-16T07:22:00.000Z" itemprop="datePublished">2018-11-16</time>
         </a>
     </div>
 
 
                         
-    <div class="article-category">
-    	<i class="fas fa-folder"></i>
-        <a class="article-category-link" href="/categories/意想不到的css/">意想不到的css</a>
-    </div>
-
                         
     <div class="article-tag">
         <i class="fas fa-tag"></i>
-        <a class="tag-link" href="/tags/css/">css</a>
+        <a class="tag-link" href="/tags/nginx-代理/">nginx 代理</a>
     </div>
 
                     </div>
@@ -228,7 +228,20 @@
         <div class="article-entry" itemprop="articleBody">
         
             
-            <p><a href="https://www.zhangxinxu.com/wordpress/2012/09/css3-3d-transform-perspective-animate-transition/" target="_blank" rel="noopener">张鑫旭-CSS3 3D transform变换</a></p>
+            <p>最近做项目，遇到单点登录，方法是在前端做nginx代理。<br>应用系统需要配合做如下调整：<br>1、使用“*.顶级域名”访问，确保可以和KAM共享cookie<br>2、对来自Nginx代理的访问放开登录认证（安全起见，对来自其他IP的访问应该禁止）<br>3、应用系统从请求头kam_remote_user中读取登录用户（Nginx会将登录用户写入请求头）<br>4、如果应用系统需要KAM的全局唯一token，可以从cookie中读取kam_sso_token的值</p>
+<p>刚开始调试的时候是在正式环境，每次修改完代码需要重新构建才能看到效果，<br>实在繁琐，还产生了一堆不必要的commit 历史。调通之后开始思考如何在本地开发环境调试单点登录这一功能。<br>不辱使命，研究出来了，以下是步骤。</p>
+<h3 id="1、配置项目-nginx-conf"><a href="#1、配置项目-nginx-conf" class="headerlink" title="1、配置项目 nginx.conf"></a>1、配置项目 nginx.conf</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">        root   /usr/share/nginx/html;</span><br><span class="line">           auth_request /kam_auth;</span><br><span class="line">           error_page 401 = @error401;</span><br><span class="line">           auth_request_set $kam_remote_url $upstream_http_kam_remote_url;</span><br><span class="line">           proxy_set_header kam_remote_user $upstream_http_kam_remote_user;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">   location /kam_auth &#123;</span><br><span class="line">   		internal;</span><br><span class="line">   		proxy_set_header kam_remote_url "$scheme://$http_host$request_uri";</span><br><span class="line">   		proxy_set_header Host $host;</span><br><span class="line">   		proxy_pass_request_body off;</span><br><span class="line">   		proxy_set_header Content-Length "";</span><br><span class="line">   		proxy_pass 单点登录页面网址/auth;</span><br><span class="line">   	&#125;</span><br><span class="line"></span><br><span class="line">   location @error401 &#123;</span><br><span class="line">   		add_header Set-Cookie "NSREDIRECT=$kam_remote_url;Path=/;Domain=顶级域名";</span><br><span class="line">   		return 302 单点登录页面网址;</span><br><span class="line">   	&#125;</span><br></pre></td></tr></table></figure>
+<p>配置完后发布到正式环境，单点登录功能已可用</p>
+<p>继续配置，我们的目标是 dev 环境也能单点登录！</p>
+<h3 id="2、虚拟域名"><a href="#2、虚拟域名" class="headerlink" title="2、虚拟域名"></a>2、虚拟域名</h3><p>修改hosts文件  C:\Windows\System32\drivers\etc<br>加入 127.0.0.1   dev.kukagroup.com<br><img src="/images/hosts1.png" alt="hosts"><br>之后，把原来的dev运行地址 <a href="http://localhost:8080" target="_blank" rel="noopener">http://localhost:8080</a> 换成  <a href="http://dev.kukagroup.com:8080" target="_blank" rel="noopener">http://dev.kukagroup.com:8080</a> 发现可以访问了</p>
+<h3 id="3、下载-nginx"><a href="#3、下载-nginx" class="headerlink" title="3、下载 nginx"></a>3、下载 nginx</h3><p><a href="http://nginx.org/en/download.html" target="_blank" rel="noopener">nginx官网上下载相应的安装包</a><br>下载进行解压，将解压后的文件放到自己心仪的目录下。window的cmd窗口，进入到nginx目录，<br>使用 <code>start nginx.exe</code> 进行nginx的安装，如下图所示<br><img src="/images/ng-start.png" alt="hosts"></p>
+<p>安装成功，后在浏览器地址栏输入：127.0.0.1，会看到如下图所示的nginx欢迎界面<br><img src="/images/ng-ok.png" alt="hosts"></p>
+<p>如果看不到，那么说明你安装失败，你可以到你的 nginx 目录下的logs文件夹下的error下查看，<br>如果发现里面写着：<br><img src="/images/ng-80.png" alt="hosts"></p>
+<p>说明你的80端口被占用了，或是cmd命令进入dos下执行：netstat -aon | findstr :80 查看80端口是否被占用，如果占用，那么你需要修改注册表，如下步骤：<br>1、打开注册表：regedit<br>2、找到：HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\HTTP<br>3、找到一个REG_DWORD类型的项Start，将其改为0<br>4、重启系统，System进程不会占用80端口<br>此时此刻，你可以再次执行 相应的命令：start nginx.exe 命令了。</p>
+<p>nginx相关命令：<br><code>start nginx.exe</code><br><code>nginx.exe -s stop</code>                //停止nginx<br><code>nginx.exe -s reload</code>                //重新加载nginx<br><code>nginx.exe -s quit</code>                     //退出nginx</p>
+<p>因为我们已经配置了虚拟域名，所以在浏览器地址栏输入 <a href="http://dev.kukagroup.com" target="_blank" rel="noopener">http://dev.kukagroup.com</a> 也是同样的 nginx welcome 页面</p>
+<h3 id="3、配置本地-nginx-文件"><a href="#3、配置本地-nginx-文件" class="headerlink" title="3、配置本地 nginx 文件"></a>3、配置本地 nginx 文件</h3><p>修改 nginx 目录下的 conf/nginx.conf 文件<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">            root   html;</span><br><span class="line">            index  index.html index.htm;</span><br><span class="line">            auth_request /kam_auth;</span><br><span class="line">            error_page 401 = @error401;</span><br><span class="line">            auth_request_set $kam_remote_url $upstream_http_kam_remote_url;</span><br><span class="line">            proxy_set_header kam_remote_user $upstream_http_kam_remote_user;</span><br><span class="line">            proxy_pass http://dev.kukagroup.com:8080;</span><br><span class="line">        &#125;</span><br><span class="line">        location /kam_auth &#123;</span><br><span class="line">    		internal;</span><br><span class="line">    		proxy_set_header kam_remote_url "$scheme://$http_host$request_uri";</span><br><span class="line">    		proxy_set_header Host $host;</span><br><span class="line">    		proxy_pass_request_body off;</span><br><span class="line">    		proxy_set_header Content-Length "";</span><br><span class="line">    		proxy_pass 单点登录页面网址/auth;</span><br><span class="line">    	&#125;</span><br><span class="line"></span><br><span class="line">         location @error401 &#123;</span><br><span class="line">    		add_header Set-Cookie "NSREDIRECT=$kam_remote_url;Path=/;Domain=顶级域名";</span><br><span class="line">    		return 302 单点登录页面网址;</span><br><span class="line">    	&#125;</span><br></pre></td></tr></table></figure></p>
+<p>现在，在浏览器地址栏输入 <a href="http://dev.kukagroup.com" target="_blank" rel="noopener">http://dev.kukagroup.com</a> 发现自动跳转到了单点登录页面，<br>登录后返回到了我们之前的dev.kukagroup.com页面</p>
 
         
         </div>
@@ -239,7 +252,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/07/26/CSS3-3D-transform变换/" data-id="cjojqyvem0000pck3nuwovj3f" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/11/16/单点登录nginx代理及开发环境调试配置/" data-id="cjojqyvg9001cpck3nguiv7py" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
@@ -314,19 +327,10 @@
         
 <nav id="article-nav">
     
-        <a href="/2018/09/07/hello-world/" id="article-nav-newer" class="article-nav-link-wrap">
-            <strong class="article-nav-caption">上一篇</strong>
-            <div class="article-nav-title">
-                
-                    Hello World
-                
-            </div>
-        </a>
     
-    
-        <a href="/2018/07/26/npm升级依赖包/" id="article-nav-older" class="article-nav-link-wrap">
+        <a href="/2018/11/06/test/" id="article-nav-older" class="article-nav-link-wrap">
             <strong class="article-nav-caption">下一篇</strong>
-            <div class="article-nav-title">npm升级依赖包</div>
+            <div class="article-nav-title">test</div>
         </a>
     
 </nav>

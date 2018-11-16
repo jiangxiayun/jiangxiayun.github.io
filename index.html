@@ -152,11 +152,11 @@
         </div>
         <div class="article-info profile-block">
             <div class="article-info-block">
-                22
+                24
                 <span>文章</span>
             </div>
             <div class="article-info-block">
-                9
+                10
                 <span>标签</span>
             </div>
         </div>
@@ -181,6 +181,271 @@
 
             
             <section id="main">
+    <article id="post-单点登录nginx代理及开发环境调试配置" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+    
+        <h1 itemprop="name">
+            <a class="article-title" href="/2018/11/16/单点登录nginx代理及开发环境调试配置/">单点登录nginx代理及开发环境调试配置</a>
+        </h1>
+    
+
+                
+                    <div class="article-meta">
+                        
+    <div class="article-date">
+        <i class="fas fa-calendar-alt"></i>
+        <a href="/2018/11/16/单点登录nginx代理及开发环境调试配置/">
+            <time datetime="2018-11-16T07:22:00.000Z" itemprop="datePublished">2018-11-16</time>
+        </a>
+    </div>
+
+
+                        
+                        
+    <div class="article-tag">
+        <i class="fas fa-tag"></i>
+        <a class="tag-link" href="/tags/nginx-代理/">nginx 代理</a>
+    </div>
+
+                    </div>
+                
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+            
+            <p>最近做项目，遇到单点登录，方法是在前端做nginx代理。<br>应用系统需要配合做如下调整：<br>1、使用“*.顶级域名”访问，确保可以和KAM共享cookie<br>2、对来自Nginx代理的访问放开登录认证（安全起见，对来自其他IP的访问应该禁止）<br>3、应用系统从请求头kam_remote_user中读取登录用户（Nginx会将登录用户写入请求头）<br>4、如果应用系统需要KAM的全局唯一token，可以从cookie中读取kam_sso_token的值</p>
+<p>刚开始调试的时候是在正式环境，每次修改完代码需要重新构建才能看到效果，<br>实在繁琐，还产生了一堆不必要的commit 历史。调通之后开始思考如何在本地开发环境调试单点登录这一功能。<br>不辱使命，研究出来了，以下是步骤。</p>
+<h3 id="1、配置项目-nginx-conf"><a href="#1、配置项目-nginx-conf" class="headerlink" title="1、配置项目 nginx.conf"></a>1、配置项目 nginx.conf</h3><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">        root   /usr/share/nginx/html;</span><br><span class="line">           auth_request /kam_auth;</span><br><span class="line">           error_page 401 = @error401;</span><br><span class="line">           auth_request_set $kam_remote_url $upstream_http_kam_remote_url;</span><br><span class="line">           proxy_set_header kam_remote_user $upstream_http_kam_remote_user;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">   location /kam_auth &#123;</span><br><span class="line">   		internal;</span><br><span class="line">   		proxy_set_header kam_remote_url "$scheme://$http_host$request_uri";</span><br><span class="line">   		proxy_set_header Host $host;</span><br><span class="line">   		proxy_pass_request_body off;</span><br><span class="line">   		proxy_set_header Content-Length "";</span><br><span class="line">   		proxy_pass 单点登录页面网址/auth;</span><br><span class="line">   	&#125;</span><br><span class="line"></span><br><span class="line">   location @error401 &#123;</span><br><span class="line">   		add_header Set-Cookie "NSREDIRECT=$kam_remote_url;Path=/;Domain=顶级域名";</span><br><span class="line">   		return 302 单点登录页面网址;</span><br><span class="line">   	&#125;</span><br></pre></td></tr></table></figure>
+<p>配置完后发布到正式环境，单点登录功能已可用</p>
+<p>继续配置，我们的目标是 dev 环境也能单点登录！</p>
+<h3 id="2、虚拟域名"><a href="#2、虚拟域名" class="headerlink" title="2、虚拟域名"></a>2、虚拟域名</h3><p>修改hosts文件  C:\Windows\System32\drivers\etc<br>加入 127.0.0.1   dev.kukagroup.com<br><img src="/images/hosts1.png" alt="hosts"><br>之后，把原来的dev运行地址 <a href="http://localhost:8080" target="_blank" rel="noopener">http://localhost:8080</a> 换成  <a href="http://dev.kukagroup.com:8080" target="_blank" rel="noopener">http://dev.kukagroup.com:8080</a> 发现可以访问了</p>
+<h3 id="3、下载-nginx"><a href="#3、下载-nginx" class="headerlink" title="3、下载 nginx"></a>3、下载 nginx</h3><p><a href="http://nginx.org/en/download.html" target="_blank" rel="noopener">nginx官网上下载相应的安装包</a><br>下载进行解压，将解压后的文件放到自己心仪的目录下。window的cmd窗口，进入到nginx目录，<br>使用 <code>start nginx.exe</code> 进行nginx的安装，如下图所示<br><img src="/images/ng-start.png" alt="hosts"></p>
+<p>安装成功，后在浏览器地址栏输入：127.0.0.1，会看到如下图所示的nginx欢迎界面<br><img src="/images/ng-ok.png" alt="hosts"></p>
+<p>如果看不到，那么说明你安装失败，你可以到你的 nginx 目录下的logs文件夹下的error下查看，<br>如果发现里面写着：<br><img src="/images/ng-80.png" alt="hosts"></p>
+<p>说明你的80端口被占用了，或是cmd命令进入dos下执行：netstat -aon | findstr :80 查看80端口是否被占用，如果占用，那么你需要修改注册表，如下步骤：<br>1、打开注册表：regedit<br>2、找到：HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\services\HTTP<br>3、找到一个REG_DWORD类型的项Start，将其改为0<br>4、重启系统，System进程不会占用80端口<br>此时此刻，你可以再次执行 相应的命令：start nginx.exe 命令了。</p>
+<p>nginx相关命令：<br><code>start nginx.exe</code><br><code>nginx.exe -s stop</code>                //停止nginx<br><code>nginx.exe -s reload</code>                //重新加载nginx<br><code>nginx.exe -s quit</code>                     //退出nginx</p>
+<p>因为我们已经配置了虚拟域名，所以在浏览器地址栏输入 <a href="http://dev.kukagroup.com" target="_blank" rel="noopener">http://dev.kukagroup.com</a> 也是同样的 nginx welcome 页面</p>
+<h3 id="3、配置本地-nginx-文件"><a href="#3、配置本地-nginx-文件" class="headerlink" title="3、配置本地 nginx 文件"></a>3、配置本地 nginx 文件</h3><p>修改 nginx 目录下的 conf/nginx.conf 文件<br><figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">location / &#123;</span><br><span class="line">            root   html;</span><br><span class="line">            index  index.html index.htm;</span><br><span class="line">            auth_request /kam_auth;</span><br><span class="line">            error_page 401 = @error401;</span><br><span class="line">            auth_request_set $kam_remote_url $upstream_http_kam_remote_url;</span><br><span class="line">            proxy_set_header kam_remote_user $upstream_http_kam_remote_user;</span><br><span class="line">            proxy_pass http://dev.kukagroup.com:8080;</span><br><span class="line">        &#125;</span><br><span class="line">        location /kam_auth &#123;</span><br><span class="line">    		internal;</span><br><span class="line">    		proxy_set_header kam_remote_url "$scheme://$http_host$request_uri";</span><br><span class="line">    		proxy_set_header Host $host;</span><br><span class="line">    		proxy_pass_request_body off;</span><br><span class="line">    		proxy_set_header Content-Length "";</span><br><span class="line">    		proxy_pass 单点登录页面网址/auth;</span><br><span class="line">    	&#125;</span><br><span class="line"></span><br><span class="line">         location @error401 &#123;</span><br><span class="line">    		add_header Set-Cookie "NSREDIRECT=$kam_remote_url;Path=/;Domain=顶级域名";</span><br><span class="line">    		return 302 单点登录页面网址;</span><br><span class="line">    	&#125;</span><br></pre></td></tr></table></figure></p>
+<p>现在，在浏览器地址栏输入 <a href="http://dev.kukagroup.com" target="_blank" rel="noopener">http://dev.kukagroup.com</a> 发现自动跳转到了单点登录页面，<br>登录后返回到了我们之前的dev.kukagroup.com页面</p>
+
+        
+        </div>
+        <footer class="article-footer">
+            <div class="share-container">
+
+
+
+</div>
+
+    <a data-url="http://yoursite.com/2018/11/16/单点登录nginx代理及开发环境调试配置/" data-id="cjojqyvg9001cpck3nguiv7py" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+<script>
+    (function ($) {
+        // Prevent duplicate binding
+        if (typeof(__SHARE_BUTTON_BINDED__) === 'undefined' || !__SHARE_BUTTON_BINDED__) {
+            __SHARE_BUTTON_BINDED__ = true;
+        } else {
+            return;
+        }
+        $('body').on('click', function() {
+            $('.article-share-box.on').removeClass('on');
+        }).on('click', '.article-share-link', function(e) {
+            e.stopPropagation();
+
+            var $this = $(this),
+                url = $this.attr('data-url'),
+                encodedUrl = encodeURIComponent(url),
+                id = 'article-share-box-' + $this.attr('data-id'),
+                offset = $this.offset(),
+                box;
+
+            if ($('#' + id).length) {
+                box = $('#' + id);
+
+                if (box.hasClass('on')){
+                    box.removeClass('on');
+                    return;
+                }
+            } else {
+                var html = [
+                    '<div id="' + id + '" class="article-share-box">',
+                        '<input class="article-share-input" value="' + url + '">',
+                        '<div class="article-share-links">',
+                            '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="fab fa-twitter article-share-twitter" target="_blank" title="Twitter"></a>',
+                            '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="fab fa-facebook article-share-facebook" target="_blank" title="Facebook"></a>',
+                            '<a href="http://pinterest.com/pin/create/button/?url=' + encodedUrl + '" class="fab fa-pinterest article-share-pinterest" target="_blank" title="Pinterest"></a>',
+                            '<a href="https://plus.google.com/share?url=' + encodedUrl + '" class="fab fa-google article-share-google" target="_blank" title="Google+"></a>',
+                        '</div>',
+                    '</div>'
+                ].join('');
+
+              box = $(html);
+
+              $('body').append(box);
+            }
+
+            $('.article-share-box.on').hide();
+
+            box.css({
+                top: offset.top + 25,
+                left: offset.left
+            }).addClass('on');
+
+        }).on('click', '.article-share-box', function (e) {
+            e.stopPropagation();
+        }).on('click', '.article-share-box-input', function () {
+            $(this).select();
+        }).on('click', '.article-share-box-link', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            window.open(this.href, 'article-share-box-window-' + Date.now(), 'width=500,height=450');
+        });
+    })(jQuery);
+</script>
+
+            
+    
+
+        </footer>
+    </div>
+    
+</article>
+
+
+
+    <article id="post-test" class="article article-type-post" itemscope itemprop="blogPost">
+    <div class="article-inner">
+        
+        
+            <header class="article-header">
+                
+    
+        <h1 itemprop="name">
+            <a class="article-title" href="/2018/11/06/test/">test</a>
+        </h1>
+    
+
+                
+                    <div class="article-meta">
+                        
+    <div class="article-date">
+        <i class="fas fa-calendar-alt"></i>
+        <a href="/2018/11/06/test/">
+            <time datetime="2018-11-06T07:03:13.000Z" itemprop="datePublished">2018-11-06</time>
+        </a>
+    </div>
+
+
+                        
+                        
+                    </div>
+                
+            </header>
+        
+        
+        <div class="article-entry" itemprop="articleBody">
+        
+            
+            <h3 id="1-手机号"><a href="#1-手机号" class="headerlink" title="1. 手机号"></a>1. 手机号</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/^<span class="number">1</span>[<span class="number">34578</span>]\d&#123;<span class="number">9</span>&#125;$/</span><br></pre></td></tr></table></figure>
+<h3 id="2-短身份证号码"><a href="#2-短身份证号码" class="headerlink" title="2. 短身份证号码"></a>2. 短身份证号码</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/^\d&#123;<span class="number">18</span>&#125;|\d&#123;<span class="number">17</span>&#125;(x|X)$/</span><br><span class="line"></span><br><span class="line">/^\d&#123;<span class="number">6</span>&#125;(<span class="number">18</span>|<span class="number">19</span>|<span class="number">20</span>)?\d&#123;<span class="number">2</span>&#125;(<span class="number">0</span>[<span class="number">1</span><span class="number">-9</span>]|<span class="number">1</span>[<span class="number">012</span>])(<span class="number">0</span>[<span class="number">1</span><span class="number">-9</span>]|[<span class="number">12</span>]\d|<span class="number">3</span>[<span class="number">01</span>])\d&#123;<span class="number">3</span>&#125;(\d|[xX])$/</span><br></pre></td></tr></table></figure>
+<p>xxxxxx yyyy MM dd  375 0     十八位<br>xxxxxx   yy MM dd   75 0    十五位<br>正则表达式:<br>  出生日期1800-2099 (18|19|20)?\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])<br>  身份证正则表达式 /^\d{6}(18|19|20)?\d{2}(0[1-9]|1[012])(0[1-9]|[12]\d|3[01])\d{3}(\d|[xX])$/<br>  位校验规则 6位地址编码+8位出生日期+3位顺序号+1位校验位。</p>
+<h3 id="3-email"><a href="#3-email" class="headerlink" title="3. email"></a>3. email</h3><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/^[A-Za-z0<span class="number">-9</span>\u4e00-\u9fa5]+@[a-zA-Z0<span class="number">-9</span>_-]+(\.[a-zA-Z0<span class="number">-9</span>_-]+)+$/</span><br></pre></td></tr></table></figure>
+<p>名称@域名<br>名称可以包含汉字、字母、数字，域名只允许为英文和数字<br>一般域名的规律为“[N级域名][三级域名.]二级域名.顶级域名”，<br>比如“qq.com”、“www.qq.com”、“mp.weixin.qq.com”、“12-34.com.cn”，<br>分析可得域名类似“xx .xx .xx .xx”组成。</p>
+<h3 id="4-车牌"><a href="#4-车牌" class="headerlink" title="4. 车牌"></a>4. 车牌</h3><p>现在大多数车牌<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">/^[京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领A-Z]&#123;<span class="number">1</span>&#125;[A-Z]&#123;<span class="number">1</span>&#125;[A-Z0<span class="number">-9</span>]&#123;<span class="number">4</span>&#125;[A-Z0<span class="number">-9</span>挂学警港澳]&#123;<span class="number">1</span>&#125;$/</span><br></pre></td></tr></table></figure></p>
+<p>第二：新能源车<br><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">/^([\u4e00-\u9fa5][a-zA-Z](([DF](?![IO])[a-zA-Z0<span class="number">-9</span>][<span class="number">0</span><span class="number">-9</span>]&#123;<span class="number">4</span>&#125;)|([<span class="number">0</span><span class="number">-9</span>]&#123;<span class="number">5</span>&#125;[DF])))|([冀豫云辽黑湘皖鲁苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼渝京津沪新京军空海北沈兰济南广成使领A-Z]&#123;<span class="number">1</span>&#125;[a-zA-Z0<span class="number">-9</span>]&#123;<span class="number">5</span>&#125;[a-zA-Z0<span class="number">-9</span>挂学警港澳]&#123;<span class="number">1</span>&#125;)$</span><br><span class="line"></span><br><span class="line">/^(([\u4e00-\u9fa5]&#123;<span class="number">1</span>&#125;[A-Z]&#123;<span class="number">1</span>&#125;)[-]?|([wW][Jj][\u4e00-\u9fa5]&#123;<span class="number">1</span>&#125;[-]?)|([a-zA-Z]&#123;<span class="number">2</span>&#125;))([A-Za-z0<span class="number">-9</span>]&#123;<span class="number">5</span>&#125;|[DdFf][A-HJ-NP-Za-hj-np-z0<span class="number">-9</span>][<span class="number">0</span><span class="number">-9</span>]&#123;<span class="number">4</span>&#125;|[<span class="number">0</span><span class="number">-9</span>]&#123;<span class="number">5</span>&#125;[DdFf])$/</span><br></pre></td></tr></table></figure></p>
+<p>组成：省份简称（1位汉字）+发牌机关代号（1位字母）+序号（6位），总计8个字符，序号不能出现字母I和字母O<br>通用规则：不区分大小写，第一位：省份简称（1位汉字），第二位：发牌机关代号（1位字母）<br>序号位：<br> 1) 小型车，第一位：只能用字母D或字母F，第二位：字母或者数字，后四位：必须使用数字<br> 2) 大型车，前五位：必须使用数字，第六位：只能用字母D或字母F。</p>
+
+        
+        </div>
+        <footer class="article-footer">
+            <div class="share-container">
+
+
+
+</div>
+
+    <a data-url="http://yoursite.com/2018/11/06/test/" data-id="cjojqyvfr000tpck36sixxwhl" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+<script>
+    (function ($) {
+        // Prevent duplicate binding
+        if (typeof(__SHARE_BUTTON_BINDED__) === 'undefined' || !__SHARE_BUTTON_BINDED__) {
+            __SHARE_BUTTON_BINDED__ = true;
+        } else {
+            return;
+        }
+        $('body').on('click', function() {
+            $('.article-share-box.on').removeClass('on');
+        }).on('click', '.article-share-link', function(e) {
+            e.stopPropagation();
+
+            var $this = $(this),
+                url = $this.attr('data-url'),
+                encodedUrl = encodeURIComponent(url),
+                id = 'article-share-box-' + $this.attr('data-id'),
+                offset = $this.offset(),
+                box;
+
+            if ($('#' + id).length) {
+                box = $('#' + id);
+
+                if (box.hasClass('on')){
+                    box.removeClass('on');
+                    return;
+                }
+            } else {
+                var html = [
+                    '<div id="' + id + '" class="article-share-box">',
+                        '<input class="article-share-input" value="' + url + '">',
+                        '<div class="article-share-links">',
+                            '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="fab fa-twitter article-share-twitter" target="_blank" title="Twitter"></a>',
+                            '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="fab fa-facebook article-share-facebook" target="_blank" title="Facebook"></a>',
+                            '<a href="http://pinterest.com/pin/create/button/?url=' + encodedUrl + '" class="fab fa-pinterest article-share-pinterest" target="_blank" title="Pinterest"></a>',
+                            '<a href="https://plus.google.com/share?url=' + encodedUrl + '" class="fab fa-google article-share-google" target="_blank" title="Google+"></a>',
+                        '</div>',
+                    '</div>'
+                ].join('');
+
+              box = $(html);
+
+              $('body').append(box);
+            }
+
+            $('.article-share-box.on').hide();
+
+            box.css({
+                top: offset.top + 25,
+                left: offset.left
+            }).addClass('on');
+
+        }).on('click', '.article-share-box', function (e) {
+            e.stopPropagation();
+        }).on('click', '.article-share-box-input', function () {
+            $(this).select();
+        }).on('click', '.article-share-box-link', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            window.open(this.href, 'article-share-box-window-' + Date.now(), 'width=500,height=450');
+        });
+    })(jQuery);
+</script>
+
+            
+    
+
+        </footer>
+    </div>
+    
+</article>
+
+
+
     <article id="post-webpack打包后某些代码失效的解决方案" class="article article-type-post" itemscope itemprop="blogPost">
     <div class="article-inner">
         
@@ -238,7 +503,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/10/25/webpack打包后某些代码失效的解决方案/" data-id="cjno09xrx0017t4k3tmp2pahh" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/10/25/webpack打包后某些代码失效的解决方案/" data-id="cjojqyvg30016pck3xv6t146s" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
@@ -372,7 +637,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/10/25/修改浏览器默认css/" data-id="cjno09xs1001bt4k3m0rqz17z" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/10/25/修改浏览器默认css/" data-id="cjojqyvg8001bpck3dwe4l0p2" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
@@ -507,7 +772,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/09/11/vue迁移webpack4/" data-id="cjno09xrs0010t4k3zr5xxtlo" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/09/11/vue迁移webpack4/" data-id="cjojqyvfw000zpck3jhnvcmjq" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
@@ -645,7 +910,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/09/10/webpack打包优化（Vue）/" data-id="cjno09xru0014t4k3cxt0e6cl" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/09/10/webpack打包优化（Vue）/" data-id="cjojqyvg10015pck3gghw9mu1" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
@@ -778,7 +1043,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/09/10/webpack-bundle-analyzer/" data-id="cjno09xrp000xt4k3du0a9cdg" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/09/10/webpack-bundle-analyzer/" data-id="cjojqyvfz0011pck3k2ukldvp" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
@@ -916,7 +1181,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/09/07/hello-world/" data-id="cjno09xr30008t4k398wkedon" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/09/07/hello-world/" data-id="cjojqyvf20007pck34kro7v01" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
@@ -1046,7 +1311,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/07/26/CSS3-3D-transform变换/" data-id="cjno09xqf0000t4k3468qedbj" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/07/26/CSS3-3D-transform变换/" data-id="cjojqyvem0000pck3nuwovj3f" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
@@ -1173,254 +1438,7 @@
 
 </div>
 
-    <a data-url="http://yoursite.com/2018/07/26/npm升级依赖包/" data-id="cjno09xrd000it4k3iuse5l7i" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
-<script>
-    (function ($) {
-        // Prevent duplicate binding
-        if (typeof(__SHARE_BUTTON_BINDED__) === 'undefined' || !__SHARE_BUTTON_BINDED__) {
-            __SHARE_BUTTON_BINDED__ = true;
-        } else {
-            return;
-        }
-        $('body').on('click', function() {
-            $('.article-share-box.on').removeClass('on');
-        }).on('click', '.article-share-link', function(e) {
-            e.stopPropagation();
-
-            var $this = $(this),
-                url = $this.attr('data-url'),
-                encodedUrl = encodeURIComponent(url),
-                id = 'article-share-box-' + $this.attr('data-id'),
-                offset = $this.offset(),
-                box;
-
-            if ($('#' + id).length) {
-                box = $('#' + id);
-
-                if (box.hasClass('on')){
-                    box.removeClass('on');
-                    return;
-                }
-            } else {
-                var html = [
-                    '<div id="' + id + '" class="article-share-box">',
-                        '<input class="article-share-input" value="' + url + '">',
-                        '<div class="article-share-links">',
-                            '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="fab fa-twitter article-share-twitter" target="_blank" title="Twitter"></a>',
-                            '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="fab fa-facebook article-share-facebook" target="_blank" title="Facebook"></a>',
-                            '<a href="http://pinterest.com/pin/create/button/?url=' + encodedUrl + '" class="fab fa-pinterest article-share-pinterest" target="_blank" title="Pinterest"></a>',
-                            '<a href="https://plus.google.com/share?url=' + encodedUrl + '" class="fab fa-google article-share-google" target="_blank" title="Google+"></a>',
-                        '</div>',
-                    '</div>'
-                ].join('');
-
-              box = $(html);
-
-              $('body').append(box);
-            }
-
-            $('.article-share-box.on').hide();
-
-            box.css({
-                top: offset.top + 25,
-                left: offset.left
-            }).addClass('on');
-
-        }).on('click', '.article-share-box', function (e) {
-            e.stopPropagation();
-        }).on('click', '.article-share-box-input', function () {
-            $(this).select();
-        }).on('click', '.article-share-box-link', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            window.open(this.href, 'article-share-box-window-' + Date.now(), 'width=500,height=450');
-        });
-    })(jQuery);
-</script>
-
-            
-    
-
-        </footer>
-    </div>
-    
-</article>
-
-
-
-    <article id="post-js小技巧集合" class="article article-type-post" itemscope itemprop="blogPost">
-    <div class="article-inner">
-        
-        
-            <header class="article-header">
-                
-    
-        <h1 itemprop="name">
-            <a class="article-title" href="/2018/07/26/js小技巧集合/">js小技巧集合</a>
-        </h1>
-    
-
-                
-                    <div class="article-meta">
-                        
-    <div class="article-date">
-        <i class="fas fa-calendar-alt"></i>
-        <a href="/2018/07/26/js小技巧集合/">
-            <time datetime="2018-07-26T05:22:27.000Z" itemprop="datePublished">2018-07-26</time>
-        </a>
-    </div>
-
-
-                        
-                        
-    <div class="article-tag">
-        <i class="fas fa-tag"></i>
-        <a class="tag-link" href="/tags/JavaScript/">JavaScript</a>
-    </div>
-
-                    </div>
-                
-            </header>
-        
-        
-        <div class="article-entry" itemprop="articleBody">
-        
-            
-            <a id="more"></a>
-<p> 1、去除字符串中的特殊符号<br> 思路：正则表达式匹配</p>
-<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> a=<span class="string">"今天是星期五，  明天又可以放假了&amp;好好休|息一下"</span></span><br><span class="line"><span class="keyword">var</span> b=a.replace(<span class="regexp">/[&amp;\|\\\*^%$#@\-]/g</span>,<span class="string">""</span>);</span><br><span class="line">alert(b);</span><br></pre></td></tr></table></figure>
-        
-        </div>
-        <footer class="article-footer">
-            <div class="share-container">
-
-
-
-</div>
-
-    <a data-url="http://yoursite.com/2018/07/26/js小技巧集合/" data-id="cjno09xr7000ct4k34nh55muk" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
-<script>
-    (function ($) {
-        // Prevent duplicate binding
-        if (typeof(__SHARE_BUTTON_BINDED__) === 'undefined' || !__SHARE_BUTTON_BINDED__) {
-            __SHARE_BUTTON_BINDED__ = true;
-        } else {
-            return;
-        }
-        $('body').on('click', function() {
-            $('.article-share-box.on').removeClass('on');
-        }).on('click', '.article-share-link', function(e) {
-            e.stopPropagation();
-
-            var $this = $(this),
-                url = $this.attr('data-url'),
-                encodedUrl = encodeURIComponent(url),
-                id = 'article-share-box-' + $this.attr('data-id'),
-                offset = $this.offset(),
-                box;
-
-            if ($('#' + id).length) {
-                box = $('#' + id);
-
-                if (box.hasClass('on')){
-                    box.removeClass('on');
-                    return;
-                }
-            } else {
-                var html = [
-                    '<div id="' + id + '" class="article-share-box">',
-                        '<input class="article-share-input" value="' + url + '">',
-                        '<div class="article-share-links">',
-                            '<a href="https://twitter.com/intent/tweet?url=' + encodedUrl + '" class="fab fa-twitter article-share-twitter" target="_blank" title="Twitter"></a>',
-                            '<a href="https://www.facebook.com/sharer.php?u=' + encodedUrl + '" class="fab fa-facebook article-share-facebook" target="_blank" title="Facebook"></a>',
-                            '<a href="http://pinterest.com/pin/create/button/?url=' + encodedUrl + '" class="fab fa-pinterest article-share-pinterest" target="_blank" title="Pinterest"></a>',
-                            '<a href="https://plus.google.com/share?url=' + encodedUrl + '" class="fab fa-google article-share-google" target="_blank" title="Google+"></a>',
-                        '</div>',
-                    '</div>'
-                ].join('');
-
-              box = $(html);
-
-              $('body').append(box);
-            }
-
-            $('.article-share-box.on').hide();
-
-            box.css({
-                top: offset.top + 25,
-                left: offset.left
-            }).addClass('on');
-
-        }).on('click', '.article-share-box', function (e) {
-            e.stopPropagation();
-        }).on('click', '.article-share-box-input', function () {
-            $(this).select();
-        }).on('click', '.article-share-box-link', function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-
-            window.open(this.href, 'article-share-box-window-' + Date.now(), 'width=500,height=450');
-        });
-    })(jQuery);
-</script>
-
-            
-    
-
-        </footer>
-    </div>
-    
-</article>
-
-
-
-    <article id="post-height、clientHeight、scrollHeight、offsetHeight区别" class="article article-type-post" itemscope itemprop="blogPost">
-    <div class="article-inner">
-        
-        
-            <header class="article-header">
-                
-    
-        <h1 itemprop="name">
-            <a class="article-title" href="/2018/07/24/height、clientHeight、scrollHeight、offsetHeight区别/">height、clientHeight、scrollHeight、offsetHeight区别</a>
-        </h1>
-    
-
-                
-                    <div class="article-meta">
-                        
-    <div class="article-date">
-        <i class="fas fa-calendar-alt"></i>
-        <a href="/2018/07/24/height、clientHeight、scrollHeight、offsetHeight区别/">
-            <time datetime="2018-07-24T07:53:30.000Z" itemprop="datePublished">2018-07-24</time>
-        </a>
-    </div>
-
-
-                        
-                        
-                    </div>
-                
-            </header>
-        
-        
-        <div class="article-entry" itemprop="articleBody">
-        
-            <p><p><img src="/images/height.gif" alt="参数说明图"><br></p>
-            <p class="article-more-link">
-                <a href="/2018/07/24/height、clientHeight、scrollHeight、offsetHeight区别/#more">查看更多</a>
-            </p>
-        
-        </div>
-        <footer class="article-footer">
-            <div class="share-container">
-
-
-
-</div>
-
-    <a data-url="http://yoursite.com/2018/07/24/height、clientHeight、scrollHeight、offsetHeight区别/" data-id="cjno09xr00007t4k3bay7lfpu" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
+    <a data-url="http://yoursite.com/2018/07/26/npm升级依赖包/" data-id="cjojqyvf9000cpck3ye0kn1k2" class="article-share-link"><i class="fas fa-share"></i>分享到</a>
 <script>
     (function ($) {
         // Prevent duplicate binding
@@ -1513,6 +1531,24 @@
                     <li>
                         
                         <div class="item-inner">
+                            <p class="item-category"></p>
+                            <p class="item-title"><a href="/2018/11/16/单点登录nginx代理及开发环境调试配置/" class="title">单点登录nginx代理及开发环境调试配置</a></p>
+                            <p class="item-date"><time datetime="2018-11-16T07:22:00.000Z" itemprop="datePublished">2018-11-16</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-inner">
+                            <p class="item-category"></p>
+                            <p class="item-title"><a href="/2018/11/06/test/" class="title">test</a></p>
+                            <p class="item-date"><time datetime="2018-11-06T07:03:13.000Z" itemprop="datePublished">2018-11-06</time></p>
+                        </div>
+                    </li>
+                
+                    <li>
+                        
+                        <div class="item-inner">
                             <p class="item-category"><a class="article-category-link" href="/categories/webpack/">webpack</a></p>
                             <p class="item-title"><a href="/2018/10/25/webpack打包后某些代码失效的解决方案/" class="title">webpack打包后某些代码失效的解决方案</a></p>
                             <p class="item-date"><time datetime="2018-10-25T02:39:35.000Z" itemprop="datePublished">2018-10-25</time></p>
@@ -1537,24 +1573,6 @@
                         </div>
                     </li>
                 
-                    <li>
-                        
-                        <div class="item-inner">
-                            <p class="item-category"></p>
-                            <p class="item-title"><a href="/2018/09/10/webpack打包优化（Vue）/" class="title">webpack打包优化（Vue）</a></p>
-                            <p class="item-date"><time datetime="2018-09-10T03:20:00.000Z" itemprop="datePublished">2018-09-10</time></p>
-                        </div>
-                    </li>
-                
-                    <li>
-                        
-                        <div class="item-inner">
-                            <p class="item-category"><a class="article-category-link" href="/categories/webpack/">webpack</a></p>
-                            <p class="item-title"><a href="/2018/09/10/webpack-bundle-analyzer/" class="title">webpack-bundle-analyzer</a></p>
-                            <p class="item-date"><time datetime="2018-09-10T02:47:18.000Z" itemprop="datePublished">2018-09-10</time></p>
-                        </div>
-                    </li>
-                
             </ul>
         </div>
     </div>
@@ -1573,7 +1591,7 @@
     <div class="widget-wrap">
         <h3 class="widget-title">归档</h3>
         <div class="widget">
-            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">12</span></li></ul>
+            <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/11/">十一月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/10/">十月 2018</a><span class="archive-list-count">2</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/09/">九月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/07/">七月 2018</a><span class="archive-list-count">4</span></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2018/06/">六月 2018</a><span class="archive-list-count">12</span></li></ul>
         </div>
     </div>
 
@@ -1582,7 +1600,7 @@
     <div class="widget-wrap">
         <h3 class="widget-title">标签</h3>
         <div class="widget">
-            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaScript/">JavaScript</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Vue/">Vue</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Vue-webpack/">Vue webpack</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/css/">css</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/element-ui-vue/">element-ui vue</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/npm/">npm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/webpack/">webpack</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/webpack-vue/">webpack vue</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/webstorm/">webstorm</a><span class="tag-list-count">1</span></li></ul>
+            <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/tags/JavaScript/">JavaScript</a><span class="tag-list-count">7</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Vue/">Vue</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/Vue-webpack/">Vue webpack</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/css/">css</a><span class="tag-list-count">5</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/element-ui-vue/">element-ui vue</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/nginx-代理/">nginx 代理</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/npm/">npm</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/webpack/">webpack</a><span class="tag-list-count">2</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/webpack-vue/">webpack vue</a><span class="tag-list-count">1</span></li><li class="tag-list-item"><a class="tag-list-link" href="/tags/webstorm/">webstorm</a><span class="tag-list-count">1</span></li></ul>
         </div>
     </div>
 
@@ -1591,7 +1609,7 @@
     <div class="widget-wrap">
         <h3 class="widget-title">标签云</h3>
         <div class="widget tagcloud">
-            <a href="/tags/JavaScript/" style="font-size: 20px;">JavaScript</a> <a href="/tags/Vue/" style="font-size: 10px;">Vue</a> <a href="/tags/Vue-webpack/" style="font-size: 10px;">Vue webpack</a> <a href="/tags/css/" style="font-size: 16.67px;">css</a> <a href="/tags/element-ui-vue/" style="font-size: 10px;">element-ui vue</a> <a href="/tags/npm/" style="font-size: 10px;">npm</a> <a href="/tags/webpack/" style="font-size: 13.33px;">webpack</a> <a href="/tags/webpack-vue/" style="font-size: 10px;">webpack vue</a> <a href="/tags/webstorm/" style="font-size: 10px;">webstorm</a>
+            <a href="/tags/JavaScript/" style="font-size: 20px;">JavaScript</a> <a href="/tags/Vue/" style="font-size: 10px;">Vue</a> <a href="/tags/Vue-webpack/" style="font-size: 10px;">Vue webpack</a> <a href="/tags/css/" style="font-size: 16.67px;">css</a> <a href="/tags/element-ui-vue/" style="font-size: 10px;">element-ui vue</a> <a href="/tags/nginx-代理/" style="font-size: 10px;">nginx 代理</a> <a href="/tags/npm/" style="font-size: 10px;">npm</a> <a href="/tags/webpack/" style="font-size: 13.33px;">webpack</a> <a href="/tags/webpack-vue/" style="font-size: 10px;">webpack vue</a> <a href="/tags/webstorm/" style="font-size: 10px;">webstorm</a>
         </div>
     </div>
 
